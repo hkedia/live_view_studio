@@ -1,7 +1,5 @@
 defmodule LiveViewStudio.Flights do
   def search_by_airport(airport) do
-    Process.sleep(3000)
-
     list_flights()
     |> Enum.filter(
       &(&1.origin == String.upcase(airport) || &1.destination == String.upcase(airport))
