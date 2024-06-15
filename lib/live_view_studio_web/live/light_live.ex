@@ -15,21 +15,32 @@ defmodule LiveViewStudioWeb.LightLive do
           <%= @brightness %>%
         </span>
       </div>
-      <button phx-click="off">
-        <img src="/images/light-off.svg" alt="off button" />
-      </button>
-      <button phx-click="down">
-        <img src="/images/down.svg" alt="down button" />
-      </button>
-      <button phx-click="random">
-        <img src="/images/fire.svg" alt="random button" />
-      </button>
-      <button phx-click="up">
-        <img src="/images/up.svg" alt="up button" />
-      </button>
-      <button phx-click="on">
-        <img src="/images/light-on.svg" alt="on button" />
-      </button>
+      <div class="flex justify-between">
+        <button phx-click="off">
+          <img src="/images/light-off.svg" alt="off button" />
+        </button>
+        <button phx-click="down">
+          <img src="/images/down.svg" alt="down button" />
+        </button>
+        <button phx-click="random">
+          <img src="/images/fire.svg" alt="random button" />
+        </button>
+        <button phx-click="up">
+          <img src="/images/up.svg" alt="up button" />
+        </button>
+        <button phx-click="on">
+          <img src="/images/light-on.svg" alt="on button" />
+        </button>
+      </div>
+      <form phx-change="update">
+        <input
+          type="range"
+          min="0"
+          max="100"
+          name="brightness"
+          value={@brightness}
+        />
+      </form>
     </div>
     """
   end
@@ -57,6 +68,11 @@ defmodule LiveViewStudioWeb.LightLive do
 
   def handle_event("off", _unsigned_params, socket) do
     socket = assign(socket, brightness: 0)
+    {:noreply, socket}
+  end
+
+  def handle_event("update", %{"brightness" => brightness}, socket) do
+    socket = assign(socket, brightness: String.to_integer(brightness))
     {:noreply, socket}
   end
 end
