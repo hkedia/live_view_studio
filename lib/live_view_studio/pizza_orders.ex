@@ -131,4 +131,17 @@ defmodule LiveViewStudio.PizzaOrders do
   def change_pizza_order(%PizzaOrder{} = pizza_order, attrs \\ %{}) do
     PizzaOrder.changeset(pizza_order, attrs)
   end
+
+  @doc """
+  Returns the total number of orders.
+
+  ## Examples
+
+      iex> count_pizza_orders()
+      100
+
+  """
+  def count_pizza_orders do
+    Repo.aggregate(PizzaOrder, :count, :id)
+  end
 end
