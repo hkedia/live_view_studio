@@ -11,6 +11,7 @@ defmodule LiveViewStudioWeb.VolunteersLive do
     socket =
       socket
       |> stream(:volunteers, volunteers)
+      |> assign(:count, length(volunteers))
 
     {:ok, socket}
   end
@@ -19,7 +20,11 @@ defmodule LiveViewStudioWeb.VolunteersLive do
     ~H"""
     <h1>Volunteer Check-In</h1>
     <div id="volunteer-checkin">
-      <.live_component module={VolunteerFormComponent} id={:new} />
+      <.live_component
+        module={VolunteerFormComponent}
+        id={:new}
+        count={@count}
+      />
       <div id="volunteers" phx-update="stream">
         <.volunteer
           :for={{volunteer_id, volunteer} <- @streams.volunteers}
@@ -52,6 +57,7 @@ defmodule LiveViewStudioWeb.VolunteersLive do
 
   def handle_info({:volunteer_created, volunteer}, socket) do
     socket = stream_insert(socket, :volunteers, volunteer, at: 0)
+    socket = update(socket, :count, &(&1 + 1))
     {:noreply, socket}
   end
 
