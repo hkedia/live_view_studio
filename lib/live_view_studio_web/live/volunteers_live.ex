@@ -3,15 +3,14 @@ defmodule LiveViewStudioWeb.VolunteersLive do
 
   alias LiveViewStudio.Volunteers
   alias LiveViewStudio.Volunteers.Volunteer
+  alias LiveViewStudioWeb.VolunteerFormComponent
 
   def mount(_params, _session, socket) do
     volunteers = Volunteers.list_volunteers()
-    changeset = Volunteers.change_volunteer(%Volunteer{})
 
     socket =
       socket
       |> stream(:volunteers, volunteers)
-      |> assign(:form, to_form(changeset))
 
     {:ok, socket}
   end
@@ -20,50 +19,13 @@ defmodule LiveViewStudioWeb.VolunteersLive do
     ~H"""
     <h1>Volunteer Check-In</h1>
     <div id="volunteer-checkin">
-      <.form for={@form} phx-submit="save" phx-change="validate">
-        <.input
-          field={@form[:name]}
-          placeholder="Name"
-          autocomplete="off"
-          phx-debounce="2000"
-        />
-        <.input
-          field={@form[:phone]}
-          type="tel"
-          placeholder="Phone"
-          autocomplete="off"
-          phx-debounce="blur"
-        />
-        <.button phx-disable-with="Saving...">Check In</.button>
-      </.form>
+      <.live_component module={VolunteerFormComponent} id={:new} />
       <div id="volunteers" phx-update="stream">
-        <div
+        <.volunteer
           :for={{volunteer_id, volunteer} <- @streams.volunteers}
-          class={"volunteer #{if volunteer.checked_out, do: "out"}"}
+          volunteer={volunteer}
           id={volunteer_id}
-        >
-          <div class="name">
-            <%= volunteer.name %>
-          </div>
-          <div class="phone">
-            <%= volunteer.phone %>
-          </div>
-          <div class="status">
-            <button phx-click="toggle-status" phx-value-id={volunteer.id}>
-              <%= if volunteer.checked_out,
-                do: "Check In",
-                else: "Check Out" %>
-            </button>
-            <.link
-              class="delete"
-              phx-click="delete"
-              phx-value-id={volunteer.id}
-              data-confirm="Are you sure?"
-            >
-              <.icon name="hero-trash-solid" />
-            </.link>
-          </div>
-        </div>
+        />
       </div>
     </div>
     """
@@ -88,27 +50,39 @@ defmodule LiveViewStudioWeb.VolunteersLive do
     {:noreply, socket}
   end
 
-  def handle_event("save", %{"volunteer" => volunteer_params}, socket) do
-    case Volunteers.create_volunteer(volunteer_params) do
-      {:ok, volunteer} ->
-        socket = stream_insert(socket, :volunteers, volunteer, at: 0)
-
-        socket = put_flash(socket, :info, "Volunteer checked in successfully")
-        changeset = Volunteers.change_volunteer(%Volunteer{})
-        {:noreply, assign(socket, :form, to_form(changeset))}
-
-      {:error, changeset} ->
-        socket = put_flash(socket, :error, "Failed to check in the Volunteer")
-        {:noreply, assign(socket, :form, to_form(changeset))}
-    end
+  def handle_info({:volunteer_created, volunteer}, socket) do
+    socket = stream_insert(socket, :volunteers, volunteer, at: 0)
+    {:noreply, socket}
   end
 
-  def handle_event("validate", %{"volunteer" => volunteer_params}, socket) do
-    changeset =
-      %Volunteer{}
-      |> Volunteers.change_volunteer(volunteer_params)
-      |> Map.put(:action, :validate)
-
-    {:noreply, assign(socket, :form, to_form(changeset))}
+  def volunteer(assigns) do
+    ~H"""
+    <div
+      class={"volunteer #{if @volunteer.checked_out, do: "out"}"}
+      id={@id}
+    >
+      <div class="name">
+        <%= @volunteer.name %>
+      </div>
+      <div class="phone">
+        <%= @volunteer.phone %>
+      </div>
+      <div class="status">
+        <button phx-click="toggle-status" phx-value-id={@volunteer.id}>
+          <%= if @volunteer.checked_out,
+            do: "Check In",
+            else: "Check Out" %>
+        </button>
+        <.link
+          class="delete"
+          phx-click="delete"
+          phx-value-id={@volunteer.id}
+          data-confirm="Are you sure?"
+        >
+          <.icon name="hero-trash-solid" />
+        </.link>
+      </div>
+    </div>
+    """
   end
 end
