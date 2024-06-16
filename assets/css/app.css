@@ -357,7 +357,7 @@ h3 {
   @apply text-lg text-slate-700 hover:underline hover:cursor-pointer;
 }
 #servers form {
-  @apply bg-white p-6 shadow overflow-hidden rounded-r-lg h-72;
+  @apply bg-white p-6 shadow overflow-hidden rounded-r-lg h-full;
 }
 #servers form .field {
   @apply mb-4;
