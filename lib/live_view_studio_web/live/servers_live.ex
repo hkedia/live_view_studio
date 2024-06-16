@@ -2,6 +2,7 @@ defmodule LiveViewStudioWeb.ServersLive do
   use LiveViewStudioWeb, :live_view
 
   alias LiveViewStudio.Servers
+  alias LiveViewStudio.Servers.Server
 
   def mount(_params, _session, socket) do
     servers = Servers.list_servers()
@@ -26,7 +27,21 @@ defmodule LiveViewStudioWeb.ServersLive do
   end
 
   def handle_params(_params, _uri, socket) do
-    {:noreply, assign(socket, selected_server: hd(socket.assigns.servers))}
+    socket =
+      if socket.assigns.live_action == :new do
+        changeset = Servers.change_server(%Server{})
+
+        assign(socket,
+          selected_server: nil,
+          form: to_form(changeset)
+        )
+      else
+        assign(socket,
+          selected_server: hd(socket.assigns.servers)
+        )
+      end
+
+    {:noreply, socket}
   end
 
   def render(assigns) do
@@ -35,6 +50,9 @@ defmodule LiveViewStudioWeb.ServersLive do
     <div id="servers">
       <div class="sidebar">
         <div class="nav">
+          <.link patch={~p"/servers/new"} class="add">
+            + Add New Server
+          </.link>
           <.link
             :for={server <- @servers}
             patch={~p"/servers/#{server}"}
@@ -53,7 +71,11 @@ defmodule LiveViewStudioWeb.ServersLive do
       </div>
       <div class="main">
         <div class="wrapper">
-          <.server server={@selected_server} />
+          <%= if @live_action == :new do %>
+            <.server_form form={@form} />
+          <% else %>
+            <.server server={@selected_server} />
+          <% end %>
           <div class="links">
             <.link navigate={~p"/light"}>
               Adjust Lights
@@ -62,6 +84,58 @@ defmodule LiveViewStudioWeb.ServersLive do
         </div>
       </div>
     </div>
+    """
+  end
+
+  def handle_event("drink", _, socket) do
+    {:noreply, update(socket, :coffees, &(&1 + 1))}
+  end
+
+  def handle_event("save", %{"server" => server_params}, socket) do
+    case Servers.create_server(server_params) do
+      {:ok, server} ->
+        socket =
+          update(
+            socket,
+            :servers,
+            fn servers -> [server | servers] end
+          )
+
+        socket = push_patch(socket, to: ~p"/servers/#{server.id}")
+        changeset = Servers.change_server(%Server{})
+        {:noreply, assign(socket, :form, to_form(changeset))}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :form, to_form(changeset))}
+    end
+  end
+
+  def server_form(assigns) do
+    ~H"""
+    <.form for={@form} phx-submit="save">
+      <div class="field">
+        <.input field={@form[:name]} placeholder="Name" autocomplete="off" />
+      </div>
+      <div class="field">
+        <.input
+          field={@form[:framework]}
+          placeholder="Framework"
+          autocomplete="off"
+        />
+      </div>
+      <div class="field">
+        <.input
+          field={@form[:size]}
+          type="number"
+          placeholder="Size (MB)"
+          autocomplete="off"
+        />
+      </div>
+      <.button phx-disable-with="Saving...">
+        Save
+      </.button>
+      <.link patch={~p"/servers"} class="cancel">Cancel</.link>
+    </.form>
     """
   end
 
@@ -93,9 +167,5 @@ defmodule LiveViewStudioWeb.ServersLive do
       </div>
     </div>
     """
-  end
-
-  def handle_event("drink", _, socket) do
-    {:noreply, update(socket, :coffees, &(&1 + 1))}
   end
 end
