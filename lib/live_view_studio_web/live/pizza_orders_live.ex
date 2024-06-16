@@ -17,9 +17,14 @@ defmodule LiveViewStudioWeb.PizzaOrdersLive do
     sort_by = valid_sort_by(params)
     sort_order = valid_sort_order(params)
 
+    page = param_to_integer(params["page"], 1)
+    per_page = param_to_integer(params["per_page"], 5)
+
     options = %{
       sort_by: sort_by,
-      sort_order: sort_order
+      sort_order: sort_order,
+      page: page,
+      per_page: per_page
     }
 
     pizza_orders = PizzaOrders.list_pizza_orders(options)
@@ -27,9 +32,16 @@ defmodule LiveViewStudioWeb.PizzaOrdersLive do
     socket =
       assign(socket,
         pizza_orders: pizza_orders,
-        options: options
+        options: options,
+        pizza_orders_count: PizzaOrders.count_pizza_orders()
       )
 
+    {:noreply, socket}
+  end
+
+  def handle_event("select-per-page", %{"per-page" => per_page}, socket) do
+    params = %{socket.assigns.options | per_page: per_page}
+    socket = push_patch(socket, to: ~p"/pizza-orders?#{params}")
     {:noreply, socket}
   end
 
@@ -74,4 +86,32 @@ defmodule LiveViewStudioWeb.PizzaOrdersLive do
   end
 
   defp valid_sort_order(_params), do: :asc
+
+  defp param_to_integer(nil, default), do: default
+
+  defp param_to_integer(param, default) do
+    case Integer.parse(param) do
+      {number, _} ->
+        number
+
+      :error ->
+        default
+    end
+  end
+
+  defp more_pages?(options, pizza_orders_count) do
+    options.page * options.per_page < pizza_orders_count
+  end
+
+  defp pages(options, pizza_orders_count) do
+    page_count = ceil(pizza_orders_count / options.per_page)
+
+    for page_number <- (options.page - 2)..(options.page + 2),
+        page_number > 0 do
+      if page_number <= page_count do
+        current_page? = page_number == options.page
+        {page_number, current_page?}
+      end
+    end
+  end
 end
