@@ -61,10 +61,12 @@ defmodule LiveViewStudioWeb.VolunteersLive do
             fn volunteers -> [volunteer | volunteers] end
           )
 
+        socket = put_flash(socket, :info, "Volunteer checked in successfully")
         changeset = Volunteers.change_volunteer(%Volunteer{})
         {:noreply, assign(socket, :form, to_form(changeset))}
 
       {:error, changeset} ->
+        socket = put_flash(socket, :error, "Failed to check in the Volunteer")
         {:noreply, assign(socket, :form, to_form(changeset))}
     end
   end
