@@ -1,6 +1,8 @@
 defmodule LiveViewStudioWeb.BingoLive do
   use LiveViewStudioWeb, :live_view
 
+  on_mount {LiveViewStudioWeb.UserAuth, :ensure_authenticated}
+
   def mount(_params, _session, socket) do
     if connected?(socket) do
       :timer.send_interval(3000, self(), :tick)
@@ -18,6 +20,9 @@ defmodule LiveViewStudioWeb.BingoLive do
   def render(assigns) do
     ~H"""
     <h1>Bingo Boss 📢</h1>
+    <div class="flex justify-center">
+      Showing for: <%= @current_user.email %>
+    </div>
     <div id="bingo">
       <div class="number">
         <%= @number %>
