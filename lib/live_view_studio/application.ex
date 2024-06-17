@@ -14,6 +14,7 @@ defmodule LiveViewStudio.Application do
       LiveViewStudio.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: LiveViewStudio.PubSub},
+      # Presence
       LiveViewStudioWeb.Presence,
       # Start Finch
       {Finch, name: LiveViewStudio.Finch},
