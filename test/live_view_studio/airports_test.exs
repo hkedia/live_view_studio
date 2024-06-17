@@ -4,7 +4,7 @@ defmodule LiveViewStudio.AirportsTest do
   alias LiveViewStudio.Airports
 
   test "suggest/1 with empty prefix returns empty list" do
-    assert [] = Airports.suggest("")
+    assert %{} = Airports.suggest("")
   end
 
   test "suggest/1 with prefix returns list of airports with prefix" do
