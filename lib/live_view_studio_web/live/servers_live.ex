@@ -5,6 +5,10 @@ defmodule LiveViewStudioWeb.ServersLive do
   alias LiveViewStudioWeb.ServerFormComponent
 
   def mount(_params, _session, socket) do
+    if connected?(socket) do
+      Servers.subscribe()
+    end
+
     servers = Servers.list_servers()
 
     socket =
@@ -92,17 +96,10 @@ defmodule LiveViewStudioWeb.ServersLive do
     server = Servers.get_server!(id)
     new_status = get_new_status(server.status)
 
-    {:ok, server} = Servers.update_server(server, %{status: new_status})
-
-    servers =
-      Enum.map(socket.assigns.servers, fn s ->
-        if s.id == server.id, do: server, else: s
-      end)
-
-    socket =
-      assign(socket,
-        selected_server: server,
-        servers: servers
+    {:ok, _server} =
+      Servers.update_server(
+        server,
+        %{status: new_status}
       )
 
     {:noreply, socket}
@@ -116,7 +113,27 @@ defmodule LiveViewStudioWeb.ServersLive do
         fn servers -> [server | servers] end
       )
 
-    socket = push_patch(socket, to: ~p"/servers/#{server.id}")
+    {:noreply, socket}
+  end
+
+  def handle_info({:server_updated, server}, socket) do
+    # If the updated server is the selected server,
+    # assign it so the status button is re-rendered:
+    socket =
+      if server.id == socket.assigns.selected_server.id do
+        assign(socket, selected_server: server)
+      else
+        socket
+      end
+
+    # Refetch the list of servers to update the server's
+    # red/green status indicator in the sidebar:
+    servers =
+      Enum.map(socket.assigns.servers, fn s ->
+        if s.id == server.id, do: server, else: s
+      end)
+
+    socket = assign(socket, servers: servers)
     {:noreply, socket}
   end
 
