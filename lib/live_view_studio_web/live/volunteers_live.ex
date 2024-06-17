@@ -109,10 +109,9 @@ defmodule LiveViewStudioWeb.VolunteersLive do
 
   def delete_volunteer_row(volunteer, id) do
     JS.push("delete", value: %{id: volunteer.id})
-    |> JS.transition(
-      "ease duration-1000 scale-150",
+    |> JS.hide(
       to: "##{id}",
-      time: 500
+      transition: "ease duration-1000 scale-150"
     )
   end
 end
