@@ -84,6 +84,13 @@ defmodule LiveViewStudioWeb.ServersLive do
             <.link navigate={~p"/light"}>
               Adjust Lights
             </.link>
+            <a
+              data-content={url(@socket, ~p"/servers/#{@selected_server}")}
+              phx-hook="Clipboard"
+              id={"#{@selected_server.id}-clipboard"}
+            >
+              Copy Link
+            </a>
           </div>
         </div>
       </div>

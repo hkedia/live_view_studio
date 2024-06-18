@@ -23,10 +23,12 @@ import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 import Calendar from './date-picker'
 import PhoneNumber from './phone-number'
+import Clipboard from "./clipboard"
 
 let Hooks = {
   Calendar: Calendar,
-  PhoneNumber: PhoneNumber
+  PhoneNumber: PhoneNumber,
+  Clipboard: Clipboard
 }
 
 let csrfToken =
